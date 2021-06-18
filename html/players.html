@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Players</title>
+</head>
+<body>
+
+    <header>
+        <h1>Baseball Stats Web Page</h1>
+        <nav>
+            <a href="./players.html">Players</a>
+            <a href="./teams.html">Teams</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <div class="player-buttons">
+            <input
+            id="player-input"
+            type="text"
+            name="name"
+            placeholder="Name of Player"/><br/>
+            <button id="current">Search Current Players</button><br/>
+            <button id="former">Search Former Players</button><br/>
+            <button id="both">Search Both</button><br/>
+        </div>
+
+        <!-- in case there's more than one player in results set -->
+        <div class="players-list">
+
+        </div>
+        
+        <div class="display">
+
+        </div>
+
+        <div class="displayed-stats">
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../js/players.js"></script>
+</body>
+</html>
