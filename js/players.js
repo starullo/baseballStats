@@ -21,7 +21,7 @@ const handleSearchPlayers = async e => {
     })
     .catch(err=>{
         console.log(err)
-        clearPlayerInfo();
+        clearPlayerSearchResults();
         const playerInfo = document.querySelector(".players-list");
         playerInfo.innerText = err.code + "... Something went wrong with your search";
     })
@@ -42,10 +42,9 @@ const handlePlayerNameClick = e => {
     })
 }
 
-const handleSubmit = e => {
+const handleHittingSubmit = e => {
     const div = !document.querySelector(".displayed-stats") ? document.createElement("div") : document.querySelector(".displayed-stats");
     div.innerHTML = "";
-    
     const year = document.querySelector("#year").value;
     axios.get(`https://baseballwow.herokuapp.com/http://lookup-service-prod.mlb.com/json/named.sport_hitting_tm.bam?league_list_id='mlb'&game_type='${"R"}'&season='${year}'&player_id='${playerId}'`)
     .then(res=>{
@@ -63,11 +62,38 @@ const handleSubmit = e => {
     })
 }
 
+const handlePitchingSubmit = e => {
+    const div = !document.querySelector(".displayed-stats") ? document.createElement("div") : document.querySelector(".displayed-stats");
+    div.innerHTML = "";
+    const year = document.querySelector("#year").value;
+    axios.get(`https://baseballwow.herokuapp.com/http://lookup-service-prod.mlb.com/json/named.sport_pitching_tm.bam?league_list_id='mlb'&game_type='${"R"}'&season='${year}'&player_id='${playerId}'`)
+    .then(res=>{
+        console.log(res);
+        const stats = res.data.sport_pitching_tm.queryResults.row;
+        const resultsLength = res.data.sport_pitching_tm.queryResults.totalSize;
+        if (resultsLength === "1") {
+            displayPitcherStats(stats, div);
+        } else {
+            stats.forEach(obj=>{
+                displayPitcherStats(obj, div)
+            })
+        }
+  
+    })
+    .catch(err=>{
+        const p = document.createElement("p");
+        p.innerText = err.code + "... there was an error processing your request"
+        console.log(err);
+    })
+}
+
 const handleSelectYearOnChange = e => {
     const year = Number(e.target.value);
     const dropdown = document.querySelector("#year");
-    const submitButton = document.querySelector("#playerTeamYearSubmit");
-    submitButton.disabled = false;
+    const hittingSubmitButton = document.querySelector("#playerHittingSubmit");
+    const pitchingSubmitButton = document.querySelector("#playerPitchingSubmit");
+    hittingSubmitButton.disabled = false;
+    pitchingSubmitButton.disabled = false;
     dropdown.value = year;
     
 }
@@ -75,7 +101,8 @@ const handleSelectYearOnChange = e => {
 const addYearDropdownToDisplay = () => {
     const playerDisplayDiv = document.querySelector(".display");
     const dropdown = document.createElement("select");
-    const submitButton = document.createElement("button");
+    const hittingSubmitButton = document.createElement("button");
+    const pitchingSubmitButton = document.createElement("button");
 
     dropdown.name = "year";
     dropdown.id = "year";
@@ -86,10 +113,14 @@ const addYearDropdownToDisplay = () => {
     option.disabled = true;
     option.selected = "selected";
     dropdown.appendChild(option);
-    submitButton.id = "playerTeamYearSubmit";
-    submitButton.onclick = handleSubmit;
-    submitButton.innerText = "Search Year";
-    submitButton.disabled = true;
+    hittingSubmitButton.id = "playerHittingSubmit";
+    hittingSubmitButton.onclick = handleHittingSubmit;
+    hittingSubmitButton.innerText = "Batting";
+    hittingSubmitButton.disabled = true;
+    pitchingSubmitButton.id = "playerPitchingSubmit";
+    pitchingSubmitButton.onclick = handlePitchingSubmit;
+    pitchingSubmitButton.innerText = "Pitching";
+    pitchingSubmitButton.disabled = true;
 
     const debutYear = document.querySelector("#debut").innerText.slice(-4);
     const years = getPotentialSeasonsArray(Number(debutYear));
@@ -103,7 +134,8 @@ const addYearDropdownToDisplay = () => {
     }
 
     playerDisplayDiv.appendChild(dropdown);
-    playerDisplayDiv.appendChild(submitButton);
+    playerDisplayDiv.appendChild(hittingSubmitButton);
+    playerDisplayDiv.appendChild(pitchingSubmitButton);
     
 
     axios.get("https://baseballwow.herokuapp.com/http://lookup-service-prod.mlb.com/json/named.player_teams.bam?season={season}&player_id={player_id}")
@@ -184,7 +216,6 @@ const addPlayersToPage = players => {
 }
 
 const displayStats = (stats, container) => {
-    const display = document.querySelector(".displayed_stats");
     const div = document.createElement("div");
     const h5 = document.createElement("h5");
     const games = document.createElement("p");
@@ -219,6 +250,30 @@ const displayStats = (stats, container) => {
     container.appendChild(div);
 }
 
+const displayPitcherStats = (stats, container) => {
+    const div = document.createElement("div");
+    const h5 = document.createElement("h5");
+    const innings = document.createElement("p");
+    const k9 = document.createElement("p");
+    const kBbRatio = document.createElement("p");
+    const era = document.createElement("p");
+
+    h5.innerText = stats.team_full;
+    innings.innerText = "Innings Pitched: " + stats.ip;
+    k9.innerText = "K/9: " + stats.k9;
+    kBbRatio.innerText = "K/BB Ratio: " + stats.kbb;
+    era.innerText = "ERA: " + stats.era;
+
+    div.appendChild(h5);
+    div.appendChild(innings);
+    div.appendChild(k9);
+    div.appendChild(kBbRatio);
+    div.appendChild(era);
+
+    container.appendChild(div);
+
+}
+
 const clearPlayerSearchResults = () => {
     const playersList = document.querySelector(".players-list");
     playersList.innerHTML = "";
@@ -230,11 +285,6 @@ const clearPlayerDisplay = () => {
     return displayedData;
 }
 
-const clearDisplayedStats = () => {
-    const displayedStats = document.querySelector(".displayed-stats");
-    displayedStats.innerHTML = "";
-    return displayedStats;
-}
 
 const finishUrl = element => {
     return `${element.id === "current" ? "&active_sw='Y'" : element.id === "former" ? "&active_sw='N'" : ""}&name_part='${getSearchParamString()}'`;
