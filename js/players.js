@@ -6,7 +6,12 @@ let playerName;
 // event handlers
 
 const handleSearchPlayers = async e => {
-    console.log(finishUrl(e.target));
+    const pList = !document.querySelector(".players-list") ? document.createElement("div") : document.querySelector(".players-list");
+    const display = !document.querySelector(".display") ? document.createElement("div") : document.querySelector(".display");
+    const displayedStats = !document.querySelector(".displayed-stats") ? document.createElement("div") : document.querySelector(".displayed-stats");
+    pList.innerHTML = "";
+    display.innerHTML = "";
+    displayedStats.innerHTML = "";
     axios.get(`https://baseballwow.herokuapp.com/http://lookup-service-prod.mlb.com/json/named.search_player_all.bam?sport_code='mlb'${finishUrl(e.target)}`)
     .then(res=>{
         const results = res.data.search_player_all.queryResults.row;
@@ -15,15 +20,13 @@ const handleSearchPlayers = async e => {
         if (resultCount > 1) {
             addPlayersToPage(results);
         } else if (resultCount === 1) {
-            console.log('hi')
             addPlayerToDisplay(results);
         }
     })
     .catch(err=>{
-        console.log(err)
         clearPlayerSearchResults();
         const playerInfo = document.querySelector(".players-list");
-        playerInfo.innerText = err.code + "... Something went wrong with your search";
+        playerInfo.innerText = "No results found";
     })
 }
 
@@ -33,12 +36,10 @@ const handlePlayerNameClick = e => {
     .then(res=>{
         const player = res.data.player_info.queryResults.row;
         addPlayerToDisplay(player);
-        console.log(player)
     })
     .catch(err=>{
         const playerDisplay = clearPlayerDisplay();
-        playerDisplay.innerText = err.code + "... Something went wrong with your search";
-        console.log(err);
+        playerDisplay.innerText = "No results found";
     })
 }
 
@@ -48,6 +49,7 @@ const handleHittingSubmit = e => {
     const year = document.querySelector("#year").value;
     axios.get(`https://baseballwow.herokuapp.com/http://lookup-service-prod.mlb.com/json/named.sport_hitting_tm.bam?league_list_id='mlb'&game_type='${"R"}'&season='${year}'&player_id='${playerId}'`)
     .then(res=>{
+        console.log(res);
         const resultLength = res.data.sport_hitting_tm.queryResults.totalSize;
         if (resultLength === "1") {
             displayStats(res.data.sport_hitting_tm.queryResults.row, div);
@@ -58,7 +60,9 @@ const handleHittingSubmit = e => {
         }
     })
     .catch(err=>{
-        console.log(err);
+        const div = !document.querySelector(".displayed-stats") ? document.createElement("div") : document.querySelector(".displayed-stats");
+        div.innerHTML = "";
+        div.innerText = "No results found";
     })
 }
 
@@ -68,7 +72,6 @@ const handlePitchingSubmit = e => {
     const year = document.querySelector("#year").value;
     axios.get(`https://baseballwow.herokuapp.com/http://lookup-service-prod.mlb.com/json/named.sport_pitching_tm.bam?league_list_id='mlb'&game_type='${"R"}'&season='${year}'&player_id='${playerId}'`)
     .then(res=>{
-        console.log(res);
         const stats = res.data.sport_pitching_tm.queryResults.row;
         const resultsLength = res.data.sport_pitching_tm.queryResults.totalSize;
         if (resultsLength === "1") {
@@ -81,9 +84,9 @@ const handlePitchingSubmit = e => {
   
     })
     .catch(err=>{
-        const p = document.createElement("p");
-        p.innerText = err.code + "... there was an error processing your request"
-        console.log(err);
+        const div = !document.querySelector(".displayed-stats") ? document.createElement("div") : document.querySelector(".displayed-stats");
+        div.innerHTML = "";
+        div.innerText = "No results found";
     })
 }
 
@@ -138,7 +141,7 @@ const addYearDropdownToDisplay = () => {
     playerDisplayDiv.appendChild(pitchingSubmitButton);
     
 
-    axios.get("https://baseballwow.herokuapp.com/http://lookup-service-prod.mlb.com/json/named.player_teams.bam?season={season}&player_id={player_id}")
+
 }
 
 // helper functions
@@ -222,6 +225,9 @@ const displayStats = (stats, container) => {
     const atBats = document.createElement("p");
     const hits = document.createElement("p");
     const walks = document.createElement("p");
+    const obp = document.createElement("p");
+    const slg = document.createElement("p");
+    const ops = document.createElement("p");
     const avg = document.createElement("p");
     const babip = document.createElement("p");
     const homeRuns = document.createElement("p");
@@ -232,6 +238,9 @@ const displayStats = (stats, container) => {
     atBats.innerHTML = "At-Bats: " + stats.ab;
     hits.innerHTML = "Hits: " + stats.h;
     walks.innerHTML = "Walks: " + stats.bb;
+    obp.innerHTML = "On Base Percentage: " + stats.obp + "%";
+    slg.innerHTML = "Slugging Percentage: " + stats.slg + "%";
+    ops.innerHTML = "OPS: " + stats.ops;
     avg.innerHTML = "Batting Avg: " + stats.avg;
     babip.innerHTML = "BABIP: " + stats.babip;
     homeRuns.innerHTML = "Home Runs: " + stats.hr;
@@ -242,6 +251,9 @@ const displayStats = (stats, container) => {
     div.appendChild(atBats);
     div.appendChild(hits);
     div.appendChild(walks);
+    div.appendChild(obp);
+    div.appendChild(slg);
+    div.appendChild(ops);
     div.appendChild(avg);
     div.appendChild(babip);
     div.appendChild(homeRuns);
